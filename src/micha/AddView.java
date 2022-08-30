@@ -1,18 +1,31 @@
 package micha;
 
+import mitarbeiter.*;
+import verwaltung.Abteilung;
+import verwaltung.Verwaltung;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class AddView extends JFrame {
-    String[] abteilungenArray = {"", "Abteilung 1", "Abteilung 2"};
-    String[] arbeiterArray = {"", Arbeiter.SCHICHTARBEITER.toString(), Arbeiter.BÜROARBEITER.toString(), Arbeiter.MANAGER.toString()};
+    ArrayList<Abteilung> abteilungenArray = new ArrayList<>();
+
+    HashMap<String, Abteilung> abteilungMap = new HashMap<>();
+    String[] arbeiterArray = {
+            Arbeiter.SCHICHTARBEITER.toString(),
+            Arbeiter.BUEROARBEITER.toString(),
+            Arbeiter.MANAGER.toString(),
+            Arbeiter.FAHRER.toString()
+    };
     JPanel schichtarbeiterPanel;
     JPanel bueroarbeiterPanel;
     JPanel managerPanel;
     JPanel midPanel;
-    JComboBox<Arbeiter> typeSelector;
-    JComboBox<Arbeiter> abteilungSelector;
+    JComboBox<Mitarbeiter> typeSelector;
+    JComboBox<Abteilung> abteilungSelector;
 
     JTextField nameFieldText;
     JTextField addressFieldText;
@@ -22,22 +35,35 @@ public class AddView extends JFrame {
     JTextField managerFestlohnText;
     JTextField managerBonusText;
 
-    AddView() {
+    Mitarbeiter mitarbeiter;
+    Abteilung abteilung;
+    Verwaltung verwaltung;
+    AddView(Mitarbeiter mitarbeiter, Abteilung abteilung, Verwaltung verwaltung) {
+        this.mitarbeiter = mitarbeiter;
+        this.abteilung = abteilung;
+        this.verwaltung = verwaltung;
+
+        initialize_arrays();
+        initialize_gui();
+
+    }
+
+    private void initialize_gui() {
         /* Basics */
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setSize(600, 500);
-        setTitle("Add new Worker");
+        setTitle("Bearbeiten von Mitarbeiter " + mitarbeiter.getName());
 
         /* HERE COME DA BUTTONS BABY */
         JButton saveButton = new JButton("Speichern");//create button
         saveButton.addActionListener(
                 event -> {
-                        // TODO:
-                        System.out.println("Speichern Clicked.");
-                        if(verify()){
-                            System.out.println("Sending the following data: ");
-                            print_all();
-                        }
+                    // TODO:
+                    System.out.println("Speichern Clicked.");
+                    if(verify()){
+                        System.out.println("Sending the following data: ");
+                        print_all();
+                    }
                 }
         );
 
@@ -79,25 +105,11 @@ public class AddView extends JFrame {
         nameFieldPanel.add(nameFieldLabel);
         nameFieldPanel.add(nameFieldText);
 
-        JPanel addressFieldPanel = new JPanel();
-        JLabel addressFieldLabel = new JLabel("Straße: ");
-        addressFieldText = new JTextField(40);
-        addressFieldPanel.add(addressFieldLabel);
-        addressFieldPanel.add(addressFieldText);
-
-        JPanel addressFieldPanel2 = new JPanel();
-        JLabel addressFieldLabel2 = new JLabel("PLZ: ");
-        addressFieldText2 = new JTextField(40);
-        addressFieldPanel2.add(addressFieldLabel2);
-        addressFieldPanel2.add(addressFieldText2);
-
         // Glue them to the text Panel
         textPanel.add(nameFieldPanel);
-        textPanel.add(addressFieldPanel);
-        textPanel.add(addressFieldPanel2);
 
         /* Extra methods to create these panels. This becomes relevant later.
-        * These panels have the worker type specific input (money) */
+         * These panels have the worker type specific input (money) */
         schichtarbeiterPanel = createSchichtarbeiterPanel();
         bueroarbeiterPanel = createBueroArbeiterPanel();
         managerPanel = createManagerPanel();
@@ -120,7 +132,7 @@ public class AddView extends JFrame {
                 }
         );
         /* AbteilungsSelector doesn't actually do anything fancy. */
-        abteilungSelector = new JComboBox(abteilungenArray);
+        abteilungSelector = new JComboBox(abteilungMap.keySet().toArray());
         abteilungSelector.addActionListener(
                 event -> {
                     // TODO:
@@ -131,8 +143,20 @@ public class AddView extends JFrame {
         selectorPanel.add(typeSelector, BorderLayout.CENTER);
         selectorPanel.add(abteilungSelector, BorderLayout.CENTER);
 
+        loadMitarbeiter(mitarbeiter, abteilung, verwaltung);
+
         setVisible(true);
     }
+
+    private void initialize_arrays() {
+        abteilungenArray = verwaltung.getAbteilungen();
+        abteilungenArray.forEach(
+                (abt) -> {
+                    abteilungMap.put(abt.getName(), abt);
+                }
+        );
+    }
+
     void enableExtrapanel(Object arbeiter){
         /* Remove all - potential - panels from the layout and validate it. */
         midPanel.remove(schichtarbeiterPanel);
@@ -140,13 +164,14 @@ public class AddView extends JFrame {
         midPanel.remove(managerPanel);
         validate();
 
+
         // Create and make visible the specific panel.
         if (arbeiter == Arbeiter.SCHICHTARBEITER.toString()){
             midPanel.add(createSchichtarbeiterPanel());
             schichtarbeiterPanel.setVisible(true);
             return;
         }
-        if (arbeiter == Arbeiter.BÜROARBEITER.toString()){
+        if (arbeiter == Arbeiter.BUEROARBEITER.toString()){
             midPanel.add(createBueroArbeiterPanel());
             bueroarbeiterPanel.setVisible(true);
             return;
@@ -154,6 +179,11 @@ public class AddView extends JFrame {
         if (arbeiter == Arbeiter.MANAGER.toString()){
             midPanel.add(createManagerPanel());
             managerPanel.setVisible(true);
+        }
+
+        if (mitarbeiter instanceof SchichtArbeiter){
+            midPanel.add(createSchichtarbeiterPanel());
+            schichtarbeiterPanel.setVisible(true);
         }
     }
 
@@ -235,7 +265,7 @@ public class AddView extends JFrame {
                 return false;
             }
         }
-        if(typeSelector.getSelectedItem() == Arbeiter.BÜROARBEITER.toString()){
+        if(typeSelector.getSelectedItem() == Arbeiter.BUEROARBEITER.toString()){
             if(bueroArbeiterFestlohnText.getText().equals("")){
                 popup("Bitte dem Mitarbeiter ein Gehalt zahlen.");
                 return false;
@@ -268,17 +298,69 @@ public class AddView extends JFrame {
         System.out.println("Mitarbeitertyp: " + typeSelector.getSelectedItem());
         System.out.println("Abteilung: " + abteilungSelector.getSelectedItem());
         System.out.println("Mitarbeitername: " + nameFieldText.getText());
-        System.out.println("Mitarbeiteraddresse: " + addressFieldText.getText());
-        System.out.println("Mitarbeiter PLZ: " + addressFieldText2.getText());
         if(typeSelector.getSelectedItem() == Arbeiter.MANAGER.toString()) {
             System.out.println("Festgehalt: " + managerFestlohnText.getText());
             System.out.println("Bonus Gehalt: " + managerBonusText.getText());
         }
-        if(typeSelector.getSelectedItem() == Arbeiter.BÜROARBEITER.toString()) {
+        if(typeSelector.getSelectedItem() == Arbeiter.BUEROARBEITER.toString()) {
             System.out.println("Festgehalt: " + bueroArbeiterFestlohnText.getText());
         }
         if(typeSelector.getSelectedItem() == Arbeiter.SCHICHTARBEITER.toString()) {
             System.out.println("Stundenlohn: " + schichtArbeiterVerdienstText.getText());
+        }
+    }
+
+    private void loadMitarbeiter(Mitarbeiter mitarbeiter, Abteilung abteilung, Verwaltung verwaltung){
+        abteilungSelector.setSelectedItem(abteilung.getName());
+        nameFieldText.setText(mitarbeiter.getName());
+        if(mitarbeiter instanceof BueroArbeiter) {
+            System.out.println("Büroarbeiter");
+            typeSelector.setSelectedItem(Arbeiter.BUEROARBEITER.toString());
+
+            return;
+        }
+        if (mitarbeiter instanceof SchichtArbeiter){
+            System.out.println("Schichter");
+            typeSelector.setSelectedItem(Arbeiter.SCHICHTARBEITER.toString());
+
+            return;
+        }
+        if (mitarbeiter instanceof Fahrer){
+            System.out.println("Fahrer");
+            typeSelector.setSelectedItem(Arbeiter.FAHRER.toString());
+            return;
+        }
+        if (mitarbeiter instanceof Manager){
+            System.out.println("Oberbobbel");
+            typeSelector.setSelectedItem(Arbeiter.MANAGER.toString());
+        }
+        fillTypeSpecificInformation();
+    }
+
+    private void fillTypeSpecificInformation(){
+        if(mitarbeiter.getClass().toString().equals(BueroArbeiter.class.toString())) {
+            System.out.println("Büroarbeiter");
+            bueroArbeiterFestlohnText.setText(
+                    Double.toString(((BueroArbeiter) mitarbeiter).getFestgehalt())
+            );
+            return;
+        }
+        if (mitarbeiter.getClass().toString().equals(SchichtArbeiter.class.toString())){
+            System.out.println("Schichter");
+            schichtArbeiterVerdienstText.setText(
+                    Double.toString(
+                            ((SchichtArbeiter) mitarbeiter).getStundenSatz()
+                    )
+            );
+            return;
+        }
+        if (mitarbeiter.getClass().toString().equals(Fahrer.class.toString())){
+            System.out.println("Fahrer");
+
+            return;
+        }
+        if (mitarbeiter.getClass().toString().equals(Manager.class.toString())){
+            System.out.println("Oberbobbel");
         }
     }
 }
