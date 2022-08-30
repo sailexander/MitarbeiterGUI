@@ -15,9 +15,9 @@ public class MitarbeiterMain {
 	public static void main(String[] args) {
 		//testBasics();
 		//testWithAbteilung();
-		erstelleVerwaltung();
-		ladeVerwaltung();
-
+		//erstelleVerwaltung();
+		//ladeVerwaltung();
+		findeManager();
 	}
 
 	public static void testBasics() {
@@ -126,5 +126,18 @@ public class MitarbeiterMain {
 	
 	public static void ladeVerwaltung() {
 		Verwaltung verwaltung = new Verwaltung();
+	}
+	
+	public static void findeManager() {
+		Verwaltung verwaltung = new Verwaltung();
+		
+		ArrayList<Manager> managers = verwaltung.getManagers();
+		
+		managers.forEach((manager) -> System.out.println(manager.getID() + " " + manager.getName()));
+		
+		verwaltung.removeMitarbeiter(managers.get(1));
+		managers = verwaltung.getManagers();
+		
+		managers.forEach((manager) -> System.out.println(manager.getID() + " " + manager.getName()));
 	}
 }

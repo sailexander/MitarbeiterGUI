@@ -7,6 +7,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
+import mitarbeiter.Manager;
 import mitarbeiter.Mitarbeiter;
 
 public class Verwaltung {
@@ -65,5 +66,32 @@ public class Verwaltung {
 		} catch(IOException ex){
             ex.printStackTrace();
         }
+	}
+	
+	public void removeMitarbeiter(Mitarbeiter target) {
+		this.abteilungen.forEach(
+				(abteilung) -> abteilung.removeMitarbeiter(target)
+		);
+	}
+	
+	public ArrayList<Manager> getManagers() {
+		ArrayList<Manager> targets = new ArrayList<Manager>();
+		
+		this.abteilungen.forEach(
+			(abteilung) -> {
+				
+				targets.add(abteilung.getLeiter());
+				
+				abteilung.getMitarbeiterAsList().forEach(
+					(mitarbeiter) -> {
+						if(mitarbeiter instanceof Manager) {
+							targets.add((Manager) mitarbeiter);
+						}
+					}
+				);	
+			}
+		);
+		
+		return targets;
 	}
 }
