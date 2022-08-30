@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
+import gui.edit.EditAbteilung;
 import mitarbeiter.*;
 import verwaltung.Abteilung;
 import verwaltung.Verwaltung;
@@ -17,7 +18,8 @@ public class MitarbeiterMain {
 		//testWithAbteilung();
 		//erstelleVerwaltung();
 		//ladeVerwaltung();
-		findeManager();
+		//findeManager();
+		testEditAbteilung();
 	}
 
 	public static void testBasics() {
@@ -139,5 +141,11 @@ public class MitarbeiterMain {
 		managers = verwaltung.getManagers();
 		
 		managers.forEach((manager) -> System.out.println(manager.getID() + " " + manager.getName()));
+	}
+
+	public static void testEditAbteilung() {
+		Verwaltung verwaltung = new Verwaltung();
+		
+		EditAbteilung edit = new EditAbteilung(verwaltung);
 	}
 }
